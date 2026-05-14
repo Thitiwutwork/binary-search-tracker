@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Binary Search Game Tracker</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+    <!-- เชื่อมโยงไฟล์ CSS ที่แยกออกมา -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container" id="app-container">
+      <h2>🎮 Game Tracker Assistant</h2>
+
+      <div class="status-box">
+        <div>รอบที่: <strong id="round-display">1</strong></div>
+        <div>
+          ขอบเขตปัจจุบัน:
+          <strong class="highlight"
+            >[ <span id="low-display">1</span> -
+            <span id="high-display">9999</span> ]</strong
+          >
+        </div>
+        <div style="margin-top: 10px; color: #2980b9">
+          💡 คำแนะนำ: ควรทายเลข
+          <strong>>> <span id="rec-display">5000</span> <<</strong>
+        </div>
+      </div>
+
+      <div>
+        <label for="guess-input"
+          ><strong>คุณทายเลขอะไรลงไปในเกม?</strong></label
+        >
+        <div class="input-group" style="margin-top: 8px">
+          <input
+            type="number"
+            id="guess-input"
+            placeholder="ใส่ตัวเลขที่ทาย..."
+            onkeypress="handleEnter(event)"
+          />
+          <button onclick="calculatePlan()">วางแผนล่วงหน้า</button>
+        </div>
+      </div>
+
+      <!-- ส่วนแสดงแผนล่วงหน้า -->
+      <div class="plan-box" id="plan-section">
+        <h4 style="margin-top: 0; color: #7f8c8d">
+          🔮 แผนล่วงหน้าจากเลข <span id="user-guess-display"></span>
+        </h4>
+        <div style="margin-bottom: 10px">
+          <strong>📉 ถ้าระบบเกมตอบว่า "น้อยกว่า":</strong><br />
+          ขอบเขตใหม่: <span id="less-range"></span><br />
+          ก้าวต่อไปควรทาย:
+          <strong style="color: #e67e22"
+            >>> <span id="less-next"></span> <<</strong
+          >
+        </div>
+        <div>
+          <strong>📈 ถ้าระบบเกมตอบว่า "มากกว่า":</strong><br />
+          ขอบเขตใหม่: <span id="more-range"></span><br />
+          ก้าวต่อไปควรทาย:
+          <strong style="color: #2980b9"
+            >>> <span id="more-next"></span> <<</strong
+          >
+        </div>
+      </div>
+
+      <!-- ปุ่มเลือกผลลัพธ์จากเกม -->
+      <div class="action-buttons" id="action-section">
+        <strong style="text-align: center"
+          >สรุปว่าเกมตอบกลับมาว่าอะไรครับ?</strong
+        >
+        <button class="btn-orange" onclick="updateGame('less')">
+          📉 เกมบอกว่า "น้อยกว่า"
+        </button>
+        <button class="btn-blue" onclick="updateGame('more')">
+          📈 เกมบอกว่า "มากกว่า"
+        </button>
+        <button onclick="updateGame('correct')">🎉 เกมบอกว่า "ถูกต้อง!"</button>
+      </div>
+    </div>
+
+    <!-- หน้าจอตอนชนะ -->
+    <div class="container win-screen" id="win-screen">
+      <h1 style="font-size: 3em; margin: 0">🏆</h1>
+      <h2>สุดยอดครับ!</h2>
+      <p>คุณปิดเกมได้สำเร็จภายใน <strong id="final-round"></strong> รอบ!</p>
+      <button onclick="location.reload()" style="margin-top: 20px">
+        เริ่มเกมใหม่
+      </button>
+    </div>
+
+    <script>
+      // ตัวแปรเก็บสถานะ
+      let low = 1;
+      let high = 9999;
+      let roundNum = 1;
+      let currentGuess = 0;
+      let lessHigh = 0;
+      let greaterLow = 0;
+
+      // อัปเดต UI หน้าแรก
+      function initUI() {
+        document.getElementById("round-display").innerText = roundNum;
+        document.getElementById("low-display").innerText = low;
+        document.getElementById("high-display").innerText = high;
+        document.getElementById("rec-display").innerText = Math.floor(
+          (low + high) / 2,
+        );
+
+        document.getElementById("guess-input").value = "";
+        document.getElementById("plan-section").style.display = "none";
+        document.getElementById("action-section").style.display = "none";
+        document.getElementById("guess-input").focus();
+      }
+
+      // เมื่อกด Enter ในช่องกรอก
+      function handleEnter(e) {
+        if (e.key === "Enter") calculatePlan();
+      }
+
+      // คำนวณแผนเมื่อกดปุ่ม
+      function calculatePlan() {
+        const inputVal = document.getElementById("guess-input").value;
+        if (!inputVal) {
+          alert("กรุณาใส่ตัวเลขที่ทายก่อนครับ!");
+          return;
+        }
+
+        currentGuess = parseInt(inputVal);
+        lessHigh = currentGuess - 1;
+        greaterLow = currentGuess + 1;
+
+        document.getElementById("user-guess-display").innerText = currentGuess;
+
+        // คำนวณฝั่งน้อยกว่า
+        if (low <= lessHigh) {
+          document.getElementById("less-range").innerText =
+            `${low} - ${lessHigh}`;
+          document.getElementById("less-next").innerText = Math.floor(
+            (low + lessHigh) / 2,
+          );
+        } else {
+          document.getElementById("less-range").innerText =
+            "ไม่มีตัวเลขเหลือแล้ว";
+          document.getElementById("less-next").innerText = "-";
+        }
+
+        // คำนวณฝั่งมากกว่า
+        if (greaterLow <= high) {
+          document.getElementById("more-range").innerText =
+            `${greaterLow} - ${high}`;
+          document.getElementById("more-next").innerText = Math.floor(
+            (greaterLow + high) / 2,
+          );
+        } else {
+          document.getElementById("more-range").innerText =
+            "ไม่มีตัวเลขเหลือแล้ว";
+          document.getElementById("more-next").innerText = "-";
+        }
+
+        // แสดงผล
+        document.getElementById("plan-section").style.display = "block";
+        document.getElementById("action-section").style.display = "flex";
+      }
+
+      // เมื่อผู้ใช้เลือกผลลัพธ์
+      function updateGame(result) {
+        if (result === "correct") {
+          document.getElementById("app-container").style.display = "none";
+          document.getElementById("win-screen").style.display = "block";
+          document.getElementById("final-round").innerText = roundNum;
+          return;
+        }
+
+        if (result === "less") {
+          high = lessHigh;
+        } else if (result === "more") {
+          low = greaterLow;
+        }
+
+        if (low > high) {
+          alert(
+            "อ๊ะ! ขอบเขตตัวเลขขัดแย้งกันเอง (อาจจะกดผิดรอบที่แล้ว) ระบบจะรีเซ็ตค่านะครับ",
+          );
+          location.reload();
+          return;
+        }
+
+        roundNum++;
+        initUI();
+      }
+
+      // เริ่มต้นระบบ
+      initUI();
+    </script>
+  </body>
+</html>
