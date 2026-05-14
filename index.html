@@ -184,24 +184,19 @@
     </div>
 
     <script>
-      // ตัวแปรเก็บสถานะ
       let low = 1;
       let high = 9999;
       let roundNum = 1;
       let currentGuess = 0;
       let lessHigh = 0;
       let greaterLow = 0;
-
-      // ตัวแปรเก็บประวัติสำหรับ Undo
       let stateHistory = [];
 
-      // ฟังก์ชันบันทึกสถานะก่อนหน้า
       function saveState() {
         stateHistory.push({ low: low, high: high, roundNum: roundNum });
         document.getElementById("undo-btn").style.display = "inline-block";
       }
 
-      // ฟังก์ชันย้อนกลับ
       function undo() {
         if (stateHistory.length > 0) {
           const prevState = stateHistory.pop();
@@ -210,14 +205,11 @@
           roundNum = prevState.roundNum;
           initUI();
         }
-
-        // ถ้าไม่เหลือประวัติแล้ว ให้ซ่อนปุ่ม
         if (stateHistory.length === 0) {
           document.getElementById("undo-btn").style.display = "none";
         }
       }
 
-      // ฟังก์ชันอัปเดตขอบเขตแบบกำหนดเอง
       function updateBounds() {
         const customLow = parseInt(document.getElementById("custom-low").value);
         const customHigh = parseInt(
@@ -231,19 +223,17 @@
           return;
         }
 
-        saveState(); // บันทึกประวัติก่อนอัปเดตขอบเขต
+        saveState();
         low = customLow;
         high = customHigh;
         initUI();
       }
 
-      // อัปเดต UI หน้าแรก
       function initUI() {
         document.getElementById("round-display").innerText = roundNum;
         document.getElementById("low-display").innerText = low;
         document.getElementById("high-display").innerText = high;
 
-        // อัปเดตช่อง Input ขอบเขตให้ตรงกับค่าปัจจุบันด้วย
         document.getElementById("custom-low").value = low;
         document.getElementById("custom-high").value = high;
 
@@ -257,12 +247,10 @@
         document.getElementById("guess-input").focus();
       }
 
-      // เมื่อกด Enter ในช่องกรอก
       function handleEnter(e) {
         if (e.key === "Enter") calculatePlan();
       }
 
-      // คำนวณแผนเมื่อกดปุ่ม
       function calculatePlan() {
         const inputVal = document.getElementById("guess-input").value;
         if (!inputVal) {
@@ -271,6 +259,15 @@
         }
 
         currentGuess = parseInt(inputVal);
+
+        // 🛑 ดักจับกันระบบรวน: เช็กว่าผู้ใช้กรอกเลขทาย นอกเหนือจากขอบเขตที่แสดงผลอยู่หรือไม่
+        if (currentGuess < low || currentGuess > high) {
+          alert(
+            `⚠️ เลข ${currentGuess} อยู่นอกขอบเขตปัจจุบัน [ ${low} - ${high} ] ครับ!\n\n💡 หากคุณกำลังจะเริ่มหาเลขชุดใหม่ อย่าลืมปรับเลขที่ช่อง "ตั้งขอบเขต" ด้านบนแล้วกดปุ่ม "อัปเดต" ก่อนนะครับ`,
+          );
+          return;
+        }
+
         lessHigh = currentGuess - 1;
         greaterLow = currentGuess + 1;
 
@@ -302,12 +299,10 @@
           document.getElementById("more-next").innerText = "-";
         }
 
-        // แสดงผล
         document.getElementById("plan-section").style.display = "block";
         document.getElementById("action-section").style.display = "flex";
       }
 
-      // เมื่อผู้ใช้เลือกผลลัพธ์
       function updateGame(result) {
         if (result === "correct") {
           document.getElementById("app-container").style.display = "none";
@@ -316,7 +311,7 @@
           return;
         }
 
-        saveState(); // บันทึกประวัติก่อนเปลี่ยนค่า เพื่อให้กด Undo ได้
+        saveState();
 
         if (result === "less") {
           high = lessHigh;
@@ -325,7 +320,6 @@
         }
 
         if (low > high) {
-          // หากค่าขัดแย้ง จะทำการ Undo ให้อัตโนมัติแทนการโหลดหน้าใหม่
           alert(
             "อ๊ะ! ขอบเขตตัวเลขขัดแย้งกันเอง ระบบจะดึงค่ากลับไปที่รอบก่อนหน้านะครับ",
           );
@@ -337,7 +331,6 @@
         initUI();
       }
 
-      // เริ่มต้นระบบ
       initUI();
     </script>
   </body>
