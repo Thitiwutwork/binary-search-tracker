@@ -107,7 +107,7 @@
         <label for="guess-input"
           ><strong>คุณทายเลขอะไรลงไปในเกม?</strong>
           <span style="font-size: 12px; color: #7f8c8d; font-weight: normal"
-            >(ระบบกรอกเลขแนะนำให้อัตโนมัติ แก้ไขได้)</span
+            >(ระบบกรอกเลขแนะนำให้อัตโนมัติ)</span
           ></label
         >
         <div class="input-group" style="margin-top: 8px">
@@ -126,7 +126,10 @@
           🔮 แผนล่วงหน้าจากเลข <span id="user-guess-display"></span>
         </h4>
         <div style="margin-bottom: 10px">
-          <strong>📉 ถ้าระบบเกมตอบว่า "น้อยกว่า":</strong><br />
+          <strong
+            >📉 ถ้าเกมด่าว่า "ทายมากไป!" (เป้าหมายจริงๆ
+            <span style="color: #e74c3c">น้อยกว่านี้</span>):</strong
+          ><br />
           ขอบเขตใหม่: <span id="less-range"></span><br />
           ก้าวต่อไปควรทาย:
           <strong style="color: #e67e22"
@@ -134,7 +137,10 @@
           >
         </div>
         <div>
-          <strong>📈 ถ้าระบบเกมตอบว่า "มากกว่า":</strong><br />
+          <strong
+            >📈 ถ้าเกมด่าว่า "ทายน้อยไป!" (เป้าหมายจริงๆ
+            <span style="color: #2980b9">มากกว่านี้</span>):</strong
+          ><br />
           ขอบเขตใหม่: <span id="more-range"></span><br />
           ก้าวต่อไปควรทาย:
           <strong style="color: #2980b9"
@@ -148,10 +154,10 @@
           >สรุปว่าเกมตอบกลับมาว่าอะไรครับ?</strong
         >
         <button class="btn-orange" onclick="updateGame('less')">
-          📉 เกมบอกว่า "น้อยกว่า"
+          📉 เกมบอกว่า "มากไป!" (ลดเลขลง)
         </button>
         <button class="btn-blue" onclick="updateGame('more')">
-          📈 เกมบอกว่า "มากกว่า"
+          📈 เกมบอกว่า "น้อยไป!" (เพิ่มเลขขึ้น)
         </button>
         <button onclick="updateGame('correct')">🎉 เกมบอกว่า "ถูกต้อง!"</button>
       </div>
@@ -175,6 +181,9 @@
       <h1 style="font-size: 3em; margin: 0">🏆</h1>
       <h2>สุดยอดครับ!</h2>
       <p>คุณปิดเกมได้สำเร็จภายใน <strong id="final-round"></strong> รอบ!</p>
+      <p style="font-size: 0.9em; color: #27ae60; margin-top: 5px">
+        (ทฤษฎี O(log n) ทำงานได้สมบูรณ์แบบ!)
+      </p>
       <button onclick="location.reload()" style="margin-top: 20px">
         เริ่มเกมใหม่
       </button>
@@ -243,7 +252,6 @@
         let recommendedGuess = Math.floor((low + high) / 2);
         document.getElementById("rec-display").innerText = recommendedGuess;
 
-        // 🚀 ฟีเจอร์ใหม่: กรอกเลขแนะนำให้อัตโนมัติ และสั่งคำนวณแผนให้ทันที
         document.getElementById("guess-input").value = recommendedGuess;
         calculatePlan();
       }
@@ -261,7 +269,6 @@
 
         currentGuess = parseInt(inputVal);
 
-        // ดักจับกันระบบรวน
         if (currentGuess < low || currentGuess > high) {
           alert(
             `⚠️ เลข ${currentGuess} อยู่นอกขอบเขตปัจจุบัน [ ${low} - ${high} ] ครับ!\n\n💡 หากคุณกำลังจะเริ่มหาเลขชุดใหม่ อย่าลืมปรับเลขที่ช่อง "ตั้งขอบเขต" ด้านบนแล้วกดปุ่ม "อัปเดต" ก่อนนะครับ`,
@@ -274,7 +281,6 @@
 
         document.getElementById("user-guess-display").innerText = currentGuess;
 
-        // คำนวณฝั่งน้อยกว่า
         if (low <= lessHigh) {
           document.getElementById("less-range").innerText =
             `${low} - ${lessHigh}`;
@@ -287,7 +293,6 @@
           document.getElementById("less-next").innerText = "-";
         }
 
-        // คำนวณฝั่งมากกว่า
         if (greaterLow <= high) {
           document.getElementById("more-range").innerText =
             `${greaterLow} - ${high}`;
@@ -314,25 +319,26 @@
 
         saveState();
 
+        // result = 'less' คือเลขเป้าหมายจริงๆ "น้อยกว่า" สิ่งที่เราทาย (เราทายมากไป)
         if (result === "less") {
           high = lessHigh;
+          // result = 'more' คือเลขเป้าหมายจริงๆ "มากกว่า" สิ่งที่เราทาย (เราทายน้อยไป)
         } else if (result === "more") {
           low = greaterLow;
         }
 
         if (low > high) {
           alert(
-            "อ๊ะ! ขอบเขตตัวเลขขัดแย้งกันเอง ระบบจะดึงค่ากลับไปที่รอบก่อนหน้านะครับ",
+            "อ๊ะ! ขอบเขตตัวเลขขัดแย้งกันเอง อาจจะกดผิดสลับปุ่มในรอบก่อนครับ ระบบจะดึงค่ากลับไปที่รอบก่อนหน้านะ",
           );
           undo();
           return;
         }
 
         roundNum++;
-        initUI(); // พอกดอัปเดตเสร็จ initUI จะรับไม้ต่อในการคำนวณและกรอกให้อัตโนมัติทันที
+        initUI();
       }
 
-      // เริ่มต้นระบบครั้งแรก
       initUI();
     </script>
   </body>
