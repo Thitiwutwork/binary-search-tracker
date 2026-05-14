@@ -105,7 +105,10 @@
 
       <div>
         <label for="guess-input"
-          ><strong>คุณทายเลขอะไรลงไปในเกม?</strong></label
+          ><strong>คุณทายเลขอะไรลงไปในเกม?</strong>
+          <span style="font-size: 12px; color: #7f8c8d; font-weight: normal"
+            >(ระบบกรอกเลขแนะนำให้อัตโนมัติ แก้ไขได้)</span
+          ></label
         >
         <div class="input-group" style="margin-top: 8px">
           <input
@@ -237,14 +240,12 @@
         document.getElementById("custom-low").value = low;
         document.getElementById("custom-high").value = high;
 
-        document.getElementById("rec-display").innerText = Math.floor(
-          (low + high) / 2,
-        );
+        let recommendedGuess = Math.floor((low + high) / 2);
+        document.getElementById("rec-display").innerText = recommendedGuess;
 
-        document.getElementById("guess-input").value = "";
-        document.getElementById("plan-section").style.display = "none";
-        document.getElementById("action-section").style.display = "none";
-        document.getElementById("guess-input").focus();
+        // 🚀 ฟีเจอร์ใหม่: กรอกเลขแนะนำให้อัตโนมัติ และสั่งคำนวณแผนให้ทันที
+        document.getElementById("guess-input").value = recommendedGuess;
+        calculatePlan();
       }
 
       function handleEnter(e) {
@@ -260,7 +261,7 @@
 
         currentGuess = parseInt(inputVal);
 
-        // 🛑 ดักจับกันระบบรวน: เช็กว่าผู้ใช้กรอกเลขทาย นอกเหนือจากขอบเขตที่แสดงผลอยู่หรือไม่
+        // ดักจับกันระบบรวน
         if (currentGuess < low || currentGuess > high) {
           alert(
             `⚠️ เลข ${currentGuess} อยู่นอกขอบเขตปัจจุบัน [ ${low} - ${high} ] ครับ!\n\n💡 หากคุณกำลังจะเริ่มหาเลขชุดใหม่ อย่าลืมปรับเลขที่ช่อง "ตั้งขอบเขต" ด้านบนแล้วกดปุ่ม "อัปเดต" ก่อนนะครับ`,
@@ -328,9 +329,10 @@
         }
 
         roundNum++;
-        initUI();
+        initUI(); // พอกดอัปเดตเสร็จ initUI จะรับไม้ต่อในการคำนวณและกรอกให้อัตโนมัติทันที
       }
 
+      // เริ่มต้นระบบครั้งแรก
       initUI();
     </script>
   </body>
