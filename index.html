@@ -3,20 +3,93 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Binary Search Game Tracker</title>
+    <title>Binary Search Game Tracker - กิลด์ร้านลาบ</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap"
       rel="stylesheet"
     />
-    <!-- เชื่อมโยงไฟล์ CSS ที่แยกออกมา -->
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div class="container" id="app-container">
       <h2>🎮 Game Tracker Assistant</h2>
 
+      <div
+        style="
+          background: #fdfefe;
+          border: 1px solid #d5dbdb;
+          padding: 12px;
+          border-radius: 6px;
+          margin-bottom: 15px;
+          display: flex;
+          gap: 10px;
+          align-items: center;
+          justify-content: center;
+          flex-wrap: wrap;
+        "
+      >
+        <label style="font-size: 14px; color: #34495e"
+          ><strong>ตั้งขอบเขต:</strong></label
+        >
+        <input
+          type="number"
+          id="custom-low"
+          style="
+            width: 70px;
+            padding: 6px;
+            text-align: center;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+          "
+          value="1"
+        />
+        <span style="color: #7f8c8d">-</span>
+        <input
+          type="number"
+          id="custom-high"
+          style="
+            width: 70px;
+            padding: 6px;
+            text-align: center;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+          "
+          value="9999"
+        />
+        <button
+          onclick="updateBounds()"
+          style="background: #9b59b6; padding: 6px 12px; font-size: 14px"
+        >
+          อัปเดต
+        </button>
+      </div>
+
       <div class="status-box">
-        <div>รอบที่: <strong id="round-display">1</strong></div>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+          "
+        >
+          <div>
+            รอบที่:
+            <strong id="round-display" style="font-size: 1.1em">1</strong>
+          </div>
+          <button
+            id="undo-btn"
+            onclick="undo()"
+            style="
+              background: #7f8c8d;
+              padding: 4px 10px;
+              font-size: 12px;
+              display: none;
+            "
+          >
+            ↩️ ย้อนกลับ
+          </button>
+        </div>
         <div>
           ขอบเขตปัจจุบัน:
           <strong class="highlight"
@@ -45,7 +118,6 @@
         </div>
       </div>
 
-      <!-- ส่วนแสดงแผนล่วงหน้า -->
       <div class="plan-box" id="plan-section">
         <h4 style="margin-top: 0; color: #7f8c8d">
           🔮 แผนล่วงหน้าจากเลข <span id="user-guess-display"></span>
@@ -68,7 +140,6 @@
         </div>
       </div>
 
-      <!-- ปุ่มเลือกผลลัพธ์จากเกม -->
       <div class="action-buttons" id="action-section">
         <strong style="text-align: center"
           >สรุปว่าเกมตอบกลับมาว่าอะไรครับ?</strong
@@ -81,9 +152,22 @@
         </button>
         <button onclick="updateGame('correct')">🎉 เกมบอกว่า "ถูกต้อง!"</button>
       </div>
+
+      <div
+        style="
+          margin-top: 30px;
+          padding-top: 15px;
+          border-top: 1px dashed #bdc3c7;
+          text-align: center;
+          color: #7f8c8d;
+          font-size: 0.85em;
+        "
+      >
+        🛠️ พัฒนาโดย <strong>Kuroo</strong><br />
+        ⚔️ ใช้สำหรับกิลด์ <strong>ร้านลาบ</strong>
+      </div>
     </div>
 
-    <!-- หน้าจอตอนชนะ -->
     <div class="container win-screen" id="win-screen">
       <h1 style="font-size: 3em; margin: 0">🏆</h1>
       <h2>สุดยอดครับ!</h2>
@@ -91,6 +175,12 @@
       <button onclick="location.reload()" style="margin-top: 20px">
         เริ่มเกมใหม่
       </button>
+
+      <div
+        style="margin-top: 30px; color: #1e8449; font-size: 0.9em; opacity: 0.8"
+      >
+        🛠️ Kuroo x กิลด์ ร้านลาบ
+      </div>
     </div>
 
     <script>
@@ -102,11 +192,61 @@
       let lessHigh = 0;
       let greaterLow = 0;
 
+      // ตัวแปรเก็บประวัติสำหรับ Undo
+      let stateHistory = [];
+
+      // ฟังก์ชันบันทึกสถานะก่อนหน้า
+      function saveState() {
+        stateHistory.push({ low: low, high: high, roundNum: roundNum });
+        document.getElementById("undo-btn").style.display = "inline-block";
+      }
+
+      // ฟังก์ชันย้อนกลับ
+      function undo() {
+        if (stateHistory.length > 0) {
+          const prevState = stateHistory.pop();
+          low = prevState.low;
+          high = prevState.high;
+          roundNum = prevState.roundNum;
+          initUI();
+        }
+
+        // ถ้าไม่เหลือประวัติแล้ว ให้ซ่อนปุ่ม
+        if (stateHistory.length === 0) {
+          document.getElementById("undo-btn").style.display = "none";
+        }
+      }
+
+      // ฟังก์ชันอัปเดตขอบเขตแบบกำหนดเอง
+      function updateBounds() {
+        const customLow = parseInt(document.getElementById("custom-low").value);
+        const customHigh = parseInt(
+          document.getElementById("custom-high").value,
+        );
+
+        if (isNaN(customLow) || isNaN(customHigh) || customLow > customHigh) {
+          alert(
+            "⚠️ กรุณากรอกขอบเขตให้ถูกต้อง (เลขล่างต้องไม่มากกว่าเลขบนครับ)",
+          );
+          return;
+        }
+
+        saveState(); // บันทึกประวัติก่อนอัปเดตขอบเขต
+        low = customLow;
+        high = customHigh;
+        initUI();
+      }
+
       // อัปเดต UI หน้าแรก
       function initUI() {
         document.getElementById("round-display").innerText = roundNum;
         document.getElementById("low-display").innerText = low;
         document.getElementById("high-display").innerText = high;
+
+        // อัปเดตช่อง Input ขอบเขตให้ตรงกับค่าปัจจุบันด้วย
+        document.getElementById("custom-low").value = low;
+        document.getElementById("custom-high").value = high;
+
         document.getElementById("rec-display").innerText = Math.floor(
           (low + high) / 2,
         );
@@ -176,6 +316,8 @@
           return;
         }
 
+        saveState(); // บันทึกประวัติก่อนเปลี่ยนค่า เพื่อให้กด Undo ได้
+
         if (result === "less") {
           high = lessHigh;
         } else if (result === "more") {
@@ -183,10 +325,11 @@
         }
 
         if (low > high) {
+          // หากค่าขัดแย้ง จะทำการ Undo ให้อัตโนมัติแทนการโหลดหน้าใหม่
           alert(
-            "อ๊ะ! ขอบเขตตัวเลขขัดแย้งกันเอง (อาจจะกดผิดรอบที่แล้ว) ระบบจะรีเซ็ตค่านะครับ",
+            "อ๊ะ! ขอบเขตตัวเลขขัดแย้งกันเอง ระบบจะดึงค่ากลับไปที่รอบก่อนหน้านะครับ",
           );
-          location.reload();
+          undo();
           return;
         }
 
