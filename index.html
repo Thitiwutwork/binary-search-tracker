@@ -107,7 +107,7 @@
         <label for="guess-input"
           ><strong>คุณทายเลขอะไรลงไปในเกม?</strong>
           <span style="font-size: 12px; color: #7f8c8d; font-weight: normal"
-            >(ระบบกรอกเลขแนะนำให้อัตโนมัติ)</span
+            >(ระบบกรอกให้อัตโนมัติ)</span
           ></label
         >
         <div class="input-group" style="margin-top: 8px">
@@ -126,23 +126,19 @@
           🔮 แผนล่วงหน้าจากเลข <span id="user-guess-display"></span>
         </h4>
         <div style="margin-bottom: 10px">
-          <strong
-            >📉 ถ้าเกมด่าว่า "ทายมากไป!" (เป้าหมายจริงๆ
-            <span style="color: #e74c3c">น้อยกว่านี้</span>):</strong
+          <strong>📉 ถ้าหน้าจอเกมโชว์ขอบเขต:</strong>
+          <span id="less-range" style="font-weight: bold; color: #e74c3c"></span
           ><br />
-          ขอบเขตใหม่: <span id="less-range"></span><br />
-          ก้าวต่อไปควรทาย:
+          👉 ก้าวต่อไปต้องทาย:
           <strong style="color: #e67e22"
             >>> <span id="less-next"></span> <<</strong
           >
         </div>
         <div>
-          <strong
-            >📈 ถ้าเกมด่าว่า "ทายน้อยไป!" (เป้าหมายจริงๆ
-            <span style="color: #2980b9">มากกว่านี้</span>):</strong
+          <strong>📈 ถ้าหน้าจอเกมโชว์ขอบเขต:</strong>
+          <span id="more-range" style="font-weight: bold; color: #2980b9"></span
           ><br />
-          ขอบเขตใหม่: <span id="more-range"></span><br />
-          ก้าวต่อไปควรทาย:
+          👉 ก้าวต่อไปต้องทาย:
           <strong style="color: #2980b9"
             >>> <span id="more-next"></span> <<</strong
           >
@@ -151,15 +147,24 @@
 
       <div class="action-buttons" id="action-section">
         <strong style="text-align: center"
-          >สรุปว่าเกมตอบกลับมาว่าอะไรครับ?</strong
+          >ตาดูหน้าจอเกม แล้วเลือกปุ่มที่ตรงกันเลยครับ!</strong
         >
-        <button class="btn-orange" onclick="updateGame('less')">
-          📉 เกมบอกว่า "มากไป!" (ลดเลขลง)
+        <button id="btn-less" class="btn-orange" onclick="updateGame('less')">
+          📉 เกมเปลี่ยนเป็น [ ... ]
         </button>
-        <button class="btn-blue" onclick="updateGame('more')">
-          📈 เกมบอกว่า "น้อยไป!" (เพิ่มเลขขึ้น)
+        <button id="btn-more" class="btn-blue" onclick="updateGame('more')">
+          📈 เกมเปลี่ยนเป็น [ ... ]
         </button>
-        <button onclick="updateGame('correct')">🎉 เกมบอกว่า "ถูกต้อง!"</button>
+        <button onclick="updateGame('correct')" style="background: #27ae60">
+          🎉 เกมบอกว่า "ถูกต้อง!"
+        </button>
+
+        <button
+          onclick="resetGame()"
+          style="background: #c0392b; margin-top: 15px"
+        >
+          🔄 ยอมแพ้ / กลับไปเริ่ม 1 - 9999 ใหม่
+        </button>
       </div>
 
       <div
@@ -181,10 +186,7 @@
       <h1 style="font-size: 3em; margin: 0">🏆</h1>
       <h2>สุดยอดครับ!</h2>
       <p>คุณปิดเกมได้สำเร็จภายใน <strong id="final-round"></strong> รอบ!</p>
-      <p style="font-size: 0.9em; color: #27ae60; margin-top: 5px">
-        (ทฤษฎี O(log n) ทำงานได้สมบูรณ์แบบ!)
-      </p>
-      <button onclick="location.reload()" style="margin-top: 20px">
+      <button onclick="resetGame()" style="margin-top: 20px">
         เริ่มเกมใหม่
       </button>
 
@@ -220,6 +222,31 @@
         if (stateHistory.length === 0) {
           document.getElementById("undo-btn").style.display = "none";
         }
+      }
+
+      // ฟังก์ชันใหม่: ปุ่มยอมแพ้/รีเซ็ตเกม
+      function resetGame() {
+        // ถ้ายอมแพ้ระหว่างเกม จะมีหน้าต่างถามยืนยันกันมือลั่น
+        if (document.getElementById("win-screen").style.display !== "block") {
+          if (
+            !confirm(
+              "⚠️ แน่ใจหรือไม่ว่าต้องการยอมแพ้และล้างค่ากลับไปเริ่มที่ 1 - 9999 ใหม่?",
+            )
+          ) {
+            return;
+          }
+        }
+
+        low = 1;
+        high = 9999;
+        roundNum = 1;
+        stateHistory = [];
+
+        document.getElementById("win-screen").style.display = "none";
+        document.getElementById("app-container").style.display = "block";
+        document.getElementById("undo-btn").style.display = "none";
+
+        initUI();
       }
 
       function updateBounds() {
@@ -271,7 +298,7 @@
 
         if (currentGuess < low || currentGuess > high) {
           alert(
-            `⚠️ เลข ${currentGuess} อยู่นอกขอบเขตปัจจุบัน [ ${low} - ${high} ] ครับ!\n\n💡 หากคุณกำลังจะเริ่มหาเลขชุดใหม่ อย่าลืมปรับเลขที่ช่อง "ตั้งขอบเขต" ด้านบนแล้วกดปุ่ม "อัปเดต" ก่อนนะครับ`,
+            `⚠️ เลข ${currentGuess} อยู่นอกขอบเขตปัจจุบัน [ ${low} - ${high} ] ครับ!\n\n💡 หากคุณกำลังจะเริ่มหาเลขชุดใหม่ ให้กดปุ่ม "ยอมแพ้ / กลับไปเริ่มใหม่" สีแดงด้านล่างได้เลยครับ`,
           );
           return;
         }
@@ -281,28 +308,44 @@
 
         document.getElementById("user-guess-display").innerText = currentGuess;
 
+        // --- อัปเดตฝั่งน้อยกว่า (ดึงตัวเลขไปโชว์บนปุ่มเลย) ---
         if (low <= lessHigh) {
-          document.getElementById("less-range").innerText =
-            `${low} - ${lessHigh}`;
+          let textLess = `[ ${low} - ${lessHigh} ]`;
+          document.getElementById("less-range").innerText = textLess;
           document.getElementById("less-next").innerText = Math.floor(
             (low + lessHigh) / 2,
           );
+
+          document.getElementById("btn-less").innerText =
+            `📉 เลือกช่วง ${textLess}`;
+          document.getElementById("btn-less").disabled = false;
         } else {
           document.getElementById("less-range").innerText =
-            "ไม่มีตัวเลขเหลือแล้ว";
+            "(ไม่มีตัวเลขเหลือแล้ว)";
           document.getElementById("less-next").innerText = "-";
+
+          document.getElementById("btn-less").innerText = `📉 (กดไม่ได้)`;
+          document.getElementById("btn-less").disabled = true;
         }
 
+        // --- อัปเดตฝั่งมากกว่า (ดึงตัวเลขไปโชว์บนปุ่มเลย) ---
         if (greaterLow <= high) {
-          document.getElementById("more-range").innerText =
-            `${greaterLow} - ${high}`;
+          let textMore = `[ ${greaterLow} - ${high} ]`;
+          document.getElementById("more-range").innerText = textMore;
           document.getElementById("more-next").innerText = Math.floor(
             (greaterLow + high) / 2,
           );
+
+          document.getElementById("btn-more").innerText =
+            `📈 เลือกช่วง ${textMore}`;
+          document.getElementById("btn-more").disabled = false;
         } else {
           document.getElementById("more-range").innerText =
-            "ไม่มีตัวเลขเหลือแล้ว";
+            "(ไม่มีตัวเลขเหลือแล้ว)";
           document.getElementById("more-next").innerText = "-";
+
+          document.getElementById("btn-more").innerText = `📈 (กดไม่ได้)`;
+          document.getElementById("btn-more").disabled = true;
         }
 
         document.getElementById("plan-section").style.display = "block";
@@ -319,10 +362,8 @@
 
         saveState();
 
-        // result = 'less' คือเลขเป้าหมายจริงๆ "น้อยกว่า" สิ่งที่เราทาย (เราทายมากไป)
         if (result === "less") {
           high = lessHigh;
-          // result = 'more' คือเลขเป้าหมายจริงๆ "มากกว่า" สิ่งที่เราทาย (เราทายน้อยไป)
         } else if (result === "more") {
           low = greaterLow;
         }
